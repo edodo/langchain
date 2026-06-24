@@ -11,6 +11,7 @@ def main():
         st.session_state.message_history = []
 
     # 2. LLM 모델 설정
+    # temperature: 0~1까지 큰값일수록 무작위 성이 높아짐.
     llm = ChatOpenAI(
         model="unsloth/gemma-4-E2B-it-GGUF",
         base_url="http://172.30.192.1:12345/v1",  # LM Studio v1 엔드포인트 유지
