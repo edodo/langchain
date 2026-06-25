@@ -1,7 +1,7 @@
 import fitz
 import streamlit as st
 from langchain_community.vectorstores import FAISS
-from langchain_openai import OpenAIEmbeddings
+from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 
@@ -28,15 +28,10 @@ def get_pdf_text():
             pdf_doc = fitz.open(stream=pdf_file.read(), filetype="pdf")
             for page in pdf_doc:
                 pdf_text += page.get_text()
-
-        # RecursiveCharacterTextSplitter로 텍스트를 청크 단위로 분할
-        text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
-            model_name="text-embedding-3-small",
-            # 적절한 chunk size는 PDF 종류에 따라 조정이 필요
-            # 너무 크게 설정하면 여러 위치의 정보를 참조하기 어려워짐
-            # 너무 작으면 하나의 청크에 충분한 문맥이 들어가지 않음
-            chunk_size=500,
-            chunk_overlap=0,
+            text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=500,       # 500자 단위로 분할
+            chunk_overlap=50,     # 문맥이 끊기는 것을 방지하기 위해 50자 중첩 (0보다 권장)
+            length_function=len,
         )
         return text_splitter.split_text(pdf_text)
     else:
@@ -49,9 +44,8 @@ def build_vector_store(pdf_text):
             st.session_state.vectorstore.add_texts(pdf_text)
         else:
             # 벡터 DB 초기화와 문서 추가를 동시에 수행
-            st.session_state.vectorstore = FAISS.from_texts(
-                pdf_text, OpenAIEmbeddings(model="text-embedding-3-small")
-            )
+            embeddings = HuggingFaceEmbeddings(model_name="jhgan/ko-sroberta-multitask")
+            st.session_state.vectorstore = FAISS.from_texts(pdf_text, embeddings)
 
 
 def page_pdf_upload_and_build_vector_db():

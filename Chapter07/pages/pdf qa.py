@@ -8,6 +8,8 @@ from langchain_openai import ChatOpenAI
 from langchain_anthropic import ChatAnthropic
 from langchain_google_genai import ChatGoogleGenerativeAI
 
+from dotenv import load_dotenv
+load_dotenv()
 
 def init_page():
     st.set_page_config(page_title="Ask My PDF(s)", page_icon="🧐")
@@ -15,19 +17,21 @@ def init_page():
 
 
 def select_model(temperature=0):
-    models = ("GPT-5 mini", "GPT-5.1", "Claude Sonnet 4.5", "Gemini 2.5 Flash")
+    models = ("GPT-5 mini", "GPT-5.1", "Claude Sonnet 4.5", "Gemini 2.5 Flash", "gemma-4-E2B-it")
     model = st.sidebar.radio("Choose a model:", models)
     if model == "GPT-5 mini":
         return ChatOpenAI(temperature=temperature, model="gpt-5-mini")
     elif model == "GPT-5.1":
         return ChatOpenAI(temperature=temperature, model="gpt-5.1")
-    elif model == "Claude Sonnet 4.5":
-        return ChatAnthropic(
-            temperature=temperature, model="claude-sonnet-4-5-20250929"
-        )
     elif model == "Gemini 2.5 Flash":
         return ChatGoogleGenerativeAI(temperature=temperature, model="gemini-2.5-flash")
-
+    elif model == "gemma-4-E2B-it":
+        return ChatOpenAI(
+            model="unsloth/gemma-4-E2B-it-GGUF",
+            base_url="http://172.30.192.1:12345/v1",  # LM Studio v1 엔드포인트 유지
+            api_key="lm-studio",
+            temperature=0.7
+        )
 
 def init_qa_chain():
     llm = select_model()
